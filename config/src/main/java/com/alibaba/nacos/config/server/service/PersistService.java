@@ -24,6 +24,7 @@ import com.alibaba.nacos.config.server.result.CustomGeneratedKeyHolder;
 import com.alibaba.nacos.config.server.utils.LogUtil;
 import com.alibaba.nacos.config.server.utils.PaginationHelper;
 import com.alibaba.nacos.config.server.utils.ParamUtils;
+import com.alibaba.nacos.config.server.utils.TimeUtils;
 import com.alibaba.nacos.config.server.utils.event.EventDispatcher;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
@@ -3176,7 +3177,7 @@ public class PersistService {
         try {
             jt.update(
                 "INSERT INTO tenant_info(kp,tenant_id,tenant_name,tenant_desc,create_source,gmt_create,gmt_modified) VALUES(?,?,?,?,?,?,?)",
-                kp, tenantId, tenantName, tenantDesc, createResoure, time, time);
+                kp, tenantId, tenantName, tenantDesc, createResoure, TimeUtils.getTime(time), TimeUtils.getTime(time));
         } catch (DataAccessException e) {
             fatalLog.error("[db-error] " + e.toString(), e);
             throw e;
@@ -3195,7 +3196,7 @@ public class PersistService {
         try {
             jt.update(
                 "UPDATE tenant_info SET tenant_name = ?, tenant_desc = ?, gmt_modified= ? WHERE kp=? AND tenant_id=?",
-                tenantName, tenantDesc, System.currentTimeMillis(), kp, tenantId);
+                tenantName, tenantDesc, TimeUtils.getTime(System.currentTimeMillis()), kp, tenantId);
         } catch (DataAccessException e) {
             fatalLog.error("[db-error] " + e.toString(), e);
             throw e;

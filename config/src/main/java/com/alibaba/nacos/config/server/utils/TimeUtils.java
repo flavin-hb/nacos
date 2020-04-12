@@ -37,4 +37,7 @@ public class TimeUtils {
         FastDateFormat format = FastDateFormat.getInstance("yyyy-MM-dd HH:mm:ss");
         return format.format(c.getTime());
     }
+    public static Timestamp getTime(Long timeMillis) {
+        return new Timestamp(timeMillis);
+    }
 }

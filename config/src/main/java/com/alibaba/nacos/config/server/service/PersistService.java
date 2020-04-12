@@ -20,6 +20,7 @@ import com.alibaba.nacos.config.server.constant.Constants;
 import com.alibaba.nacos.config.server.enums.FileTypeEnum;
 import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.config.server.model.*;
+import com.alibaba.nacos.config.server.result.CustomGeneratedKeyHolder;
 import com.alibaba.nacos.config.server.utils.LogUtil;
 import com.alibaba.nacos.config.server.utils.PaginationHelper;
 import com.alibaba.nacos.config.server.utils.ParamUtils;
@@ -1753,14 +1754,14 @@ public class PersistService {
             + " FROM (                               "
             + "   SELECT id FROM config_info         "
             + "   WHERE tenant_id like ?                  "
-            + "   ORDER BY id LIMIT ?,?             "
+            + "   ORDER BY id LIMIT ? OFFSET ?             "
             + " ) g, config_info t                   "
             + " WHERE g.id = t.id                    ";
 
         PaginationHelper<ConfigInfo> helper = new PaginationHelper<ConfigInfo>();
         try {
             return helper.fetchPageLimit(jt, sqlCountRows, sqlFetchRows,
-                new Object[]{generateLikeArgument(tenantTmp), (pageNo - 1) * pageSize, pageSize},
+                new Object[]{generateLikeArgument(tenantTmp), pageSize, (pageNo - 1) * pageSize},
                 pageNo, pageSize, CONFIG_INFO_ROW_MAPPER);
         } catch (CannotGetJdbcConnectionException e) {
             fatalLog.error("[db-error] " + e.toString(), e);
@@ -1832,14 +1833,14 @@ public class PersistService {
         String sqlFetchRows = " SELECT t.id,data_id,group_id,content,md5 "
             + " FROM (                               "
             + "   SELECT id FROM config_info         "
-            + "   ORDER BY id LIMIT ?,?             "
+            + "   ORDER BY id LIMIT ? OFFSET ?             "
             + " ) g, config_info t                   "
             + " WHERE g.id = t.id                    ";
 
         PaginationHelper<ConfigInfoBase> helper = new PaginationHelper<ConfigInfoBase>();
         try {
             return helper.fetchPageLimit(jt, sqlCountRows, sqlFetchRows, new Object[]{
-                (pageNo - 1) * pageSize, pageSize}, pageNo, pageSize, CONFIG_INFO_BASE_ROW_MAPPER);
+                pageSize, (pageNo - 1) * pageSize}, pageNo, pageSize, CONFIG_INFO_BASE_ROW_MAPPER);
         } catch (CannotGetJdbcConnectionException e) {
             fatalLog.error("[db-error] " + e.toString(), e);
             throw e;
@@ -1933,7 +1934,7 @@ public class PersistService {
         String sqlFetchRows = " SELECT t.id,data_id,group_id,tenant_id,app_name,content,md5,gmt_modified "
             + " FROM (                               "
             + "   SELECT id FROM config_info         "
-            + "   ORDER BY id LIMIT ?,?             "
+            + "   ORDER BY id LIMIT ? OFFSET ?             "
             + " ) g, config_info t                   "
             + " WHERE g.id = t.id                    ";
         PaginationHelper<ConfigInfoWrapper> helper = new PaginationHelper<ConfigInfoWrapper>();
@@ -1941,6 +1942,8 @@ public class PersistService {
         List<String> params = new ArrayList<String>();
 
         try {
+            params.add(String.valueOf(pageSize));
+            params.add(String.valueOf((pageNo - 1) * pageSize));
             return helper.fetchPageLimit(jt, sqlCountRows, sqlFetchRows, params.toArray(), pageNo, pageSize,
                 CONFIG_INFO_WRAPPER_ROW_MAPPER);
         } catch (CannotGetJdbcConnectionException e) {
@@ -1952,10 +1955,10 @@ public class PersistService {
     public Page<ConfigInfoWrapper> findAllConfigInfoFragment(final long lastMaxId, final int pageSize) {
         String select
             = "SELECT id,data_id,group_id,tenant_id,app_name,content,md5,gmt_modified,type from config_info where id > ? "
-            + "order by id asc limit ?,?";
+            + "order by id asc limit ? OFFSET ?";
         PaginationHelper<ConfigInfoWrapper> helper = new PaginationHelper<ConfigInfoWrapper>();
         try {
-            return helper.fetchPageLimit(jt, select, new Object[]{lastMaxId, 0, pageSize}, 1, pageSize,
+            return helper.fetchPageLimit(jt, select, new Object[]{lastMaxId, pageSize, 0}, 1, pageSize,
                 CONFIG_INFO_WRAPPER_ROW_MAPPER);
         } catch (CannotGetJdbcConnectionException e) {
             fatalLog.error("[db-error] " + e.toString(), e);
@@ -1969,13 +1972,13 @@ public class PersistService {
         String sqlFetchRows = " SELECT t.id,data_id,group_id,tenant_id,app_name,content,md5,gmt_modified,beta_ips "
             + " FROM (                               "
             + "   SELECT id FROM config_info_beta         "
-            + "   ORDER BY id LIMIT ?,?             "
+            + "   ORDER BY id LIMIT ? OFFSET ?             "
             + " ) g, config_info_beta t                   "
             + " WHERE g.id = t.id                    ";
         PaginationHelper<ConfigInfoBetaWrapper> helper = new PaginationHelper<ConfigInfoBetaWrapper>();
         try {
             return helper.fetchPageLimit(jt, sqlCountRows, sqlFetchRows, new Object[]{
-                (pageNo - 1) * pageSize, pageSize}, pageNo, pageSize, CONFIG_INFO_BETA_WRAPPER_ROW_MAPPER);
+                pageSize, (pageNo - 1) * pageSize}, pageNo, pageSize, CONFIG_INFO_BETA_WRAPPER_ROW_MAPPER);
 
         } catch (CannotGetJdbcConnectionException e) {
             fatalLog.error("[db-error] " + e.toString(), e);
@@ -1989,13 +1992,13 @@ public class PersistService {
         String sqlFetchRows = " SELECT t.id,data_id,group_id,tenant_id,tag_id,app_name,content,md5,gmt_modified "
             + " FROM (                               "
             + "   SELECT id FROM config_info_tag         "
-            + "   ORDER BY id LIMIT ?,?             "
+            + "   ORDER BY id LIMIT ? OFFSET ?             "
             + " ) g, config_info_tag t                   "
             + " WHERE g.id = t.id                    ";
         PaginationHelper<ConfigInfoTagWrapper> helper = new PaginationHelper<ConfigInfoTagWrapper>();
         try {
             return helper.fetchPageLimit(jt, sqlCountRows, sqlFetchRows, new Object[]{
-                (pageNo - 1) * pageSize, pageSize}, pageNo, pageSize, CONFIG_INFO_TAG_WRAPPER_ROW_MAPPER);
+                pageSize, (pageNo - 1) * pageSize}, pageNo, pageSize, CONFIG_INFO_TAG_WRAPPER_ROW_MAPPER);
 
         } catch (CannotGetJdbcConnectionException e) {
             fatalLog.error("[db-error] " + e.toString(), e);
@@ -2411,11 +2414,11 @@ public class PersistService {
             = "SELECT COUNT(*) FROM config_info_aggr WHERE data_id = ? and group_id = ? and tenant_id = ?";
         String sqlFetchRows
             = "select data_id,group_id,tenant_id,datum_id,app_name,content from config_info_aggr where data_id=? and "
-            + "group_id=? and tenant_id=? order by datum_id limit ?,?";
+            + "group_id=? and tenant_id=? order by datum_id limit ? OFFSET ?";
         PaginationHelper<ConfigInfoAggr> helper = new PaginationHelper<ConfigInfoAggr>();
         try {
             return helper.fetchPageLimit(jt, sqlCountRows, new Object[]{dataId, group, tenantTmp}, sqlFetchRows,
-                new Object[]{dataId, group, tenantTmp, (pageNo - 1) * pageSize, pageSize},
+                new Object[]{dataId, group, tenantTmp, pageSize, (pageNo - 1) * pageSize},
                 pageNo, pageSize, CONFIG_INFO_AGGR_ROW_MAPPER);
 
         } catch (CannotGetJdbcConnectionException e) {
@@ -2697,7 +2700,7 @@ public class PersistService {
 
         final String md5Tmp = Md5Utils.getMD5(configInfo.getContent(), Constants.ENCODE);
 
-        KeyHolder keyHolder = new GeneratedKeyHolder();
+        KeyHolder keyHolder = new CustomGeneratedKeyHolder("id");
 
         final String sql
             = "INSERT INTO config_info(data_id,group_id,tenant_id,app_name,content,md5,src_ip,src_user,gmt_create,"
@@ -3293,11 +3296,11 @@ public class PersistService {
     private List<ConfigInfoWrapper> listGroupKeyMd5ByPage(int pageNo, int pageSize) {
         String sqlCountRows = " SELECT COUNT(*) FROM config_info ";
         String sqlFetchRows
-            = " SELECT t.id,data_id,group_id,tenant_id,app_name,md5,gmt_modified FROM ( SELECT id FROM config_info ORDER BY id LIMIT ?,?  ) g, config_info t WHERE g.id = t.id";
+            = " SELECT t.id,data_id,group_id,tenant_id,app_name,md5,gmt_modified FROM ( SELECT id FROM config_info ORDER BY id LIMIT ? OFFSET ?  ) g, config_info t WHERE g.id = t.id";
         PaginationHelper<ConfigInfoWrapper> helper = new PaginationHelper<ConfigInfoWrapper>();
         try {
             Page<ConfigInfoWrapper> page = helper.fetchPageLimit(jt, sqlCountRows, sqlFetchRows, new Object[]{
-                (pageNo - 1) * pageSize, pageSize}, pageNo, pageSize, CONFIG_INFO_WRAPPER_ROW_MAPPER);
+                pageSize, (pageNo - 1) * pageSize}, pageNo, pageSize, CONFIG_INFO_WRAPPER_ROW_MAPPER);
 
             return page.getPageItems();
         } catch (CannotGetJdbcConnectionException e) {

@@ -17,6 +17,7 @@ package com.alibaba.nacos.config.server.service.capacity;
 
 import com.alibaba.nacos.config.server.model.capacity.Capacity;
 import com.alibaba.nacos.config.server.model.capacity.GroupCapacity;
+import com.alibaba.nacos.config.server.result.CustomGeneratedKeyHolder;
 import com.alibaba.nacos.config.server.service.DataSourceService;
 import com.alibaba.nacos.config.server.service.DynamicDataSource;
 import com.alibaba.nacos.config.server.utils.PropertyUtil;
@@ -124,7 +125,7 @@ public class GroupCapacityPersistService {
 
     private boolean insertGroupCapacity(final String sql, final GroupCapacity capacity) {
         try {
-            GeneratedKeyHolder generatedKeyHolder = new GeneratedKeyHolder();
+            GeneratedKeyHolder generatedKeyHolder = new CustomGeneratedKeyHolder("id");
             PreparedStatementCreator preparedStatementCreator = new PreparedStatementCreator() {
                 @Override
                 public PreparedStatement createPreparedStatement(Connection connection) throws SQLException {

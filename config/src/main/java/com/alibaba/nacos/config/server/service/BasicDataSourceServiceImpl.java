@@ -54,7 +54,7 @@ import static com.alibaba.nacos.core.utils.SystemUtils.STANDALONE_MODE;
 public class BasicDataSourceServiceImpl implements DataSourceService {
 
     private static final Logger log = LoggerFactory.getLogger(BasicDataSourceServiceImpl.class);
-    private static final String DEFAULT_MYSQL_DRIVER = "com.mysql.jdbc.Driver";
+    private static final String DEFAULT_MYSQL_DRIVER = "org.postgresql.Driver";
     private static final String MYSQL_HIGH_LEVEL_DRIVER = "com.mysql.cj.jdbc.Driver";
     private static String JDBC_DRIVER_NAME;
 
@@ -193,7 +193,7 @@ public class BasicDataSourceServiceImpl implements DataSourceService {
                 ds.setTimeBetweenEvictionRunsMillis(TimeUnit.MINUTES
                     .toMillis(10L));
                 ds.setTestWhileIdle(true);
-                ds.setValidationQuery("SELECT 1 FROM dual");
+                ds.setValidationQuery("SELECT 1 ");
 
                 dblist.add(ds);
 

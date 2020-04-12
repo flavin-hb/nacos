@@ -81,10 +81,13 @@ public class PropertyUtil {
      */
     private static int correctUsageDelay = 10 * 60;
     /**
-     * 单机模式使用db
+     * 单机模式使用db Mysql || Postgresql
      */
     private static boolean standaloneUseMysql = false;
-
+    /**
+     * 使用Postgresql db
+     */
+    private static boolean standaloneUsePostgresql = false;
 
     @Autowired
     private Environment env;
@@ -114,8 +117,8 @@ public class PropertyUtil {
             setDefaultMaxAggrSize(getInt("defaultMaxAggrSize", defaultMaxAggrSize));
             setCorrectUsageDelay(getInt("correctUsageDelay", correctUsageDelay));
             setInitialExpansionPercent(getInt("initialExpansionPercent", initialExpansionPercent));
-            setStandaloneUseMysql(getString("spring.datasource.platform", "").equals("mysql"));
-
+            setStandaloneUsePostgresql(getString("spring.datasource.platform", "").equals("postgresql"));
+            setStandaloneUseMysql(isStandaloneUsePostgresql() || getString("spring.datasource.platform", "").equals("mysql"));
         } catch (Exception e) {
             logger.error("read application.properties failed", e);
         }
@@ -275,5 +278,13 @@ public class PropertyUtil {
     }
     public static void setStandaloneUseMysql(boolean standaloneUseMysql) {
         PropertyUtil.standaloneUseMysql = standaloneUseMysql;
+    }
+
+    public static boolean isStandaloneUsePostgresql() {
+        return PropertyUtil.standaloneUsePostgresql;
+    }
+
+    public static void setStandaloneUsePostgresql(boolean standaloneUsePostgresql) {
+        PropertyUtil.standaloneUsePostgresql = standaloneUsePostgresql;
     }
 }

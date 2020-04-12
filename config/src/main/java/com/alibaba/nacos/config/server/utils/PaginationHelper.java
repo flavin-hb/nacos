@@ -86,7 +86,7 @@ public class PaginationHelper<E> {
         } else if (lastMaxId != null) {
             selectSQL = sqlFetchRows + " and id > " + lastMaxId + " order by id asc" + " limit " + 0 + "," + pageSize;
         } else {
-            selectSQL = sqlFetchRows + " limit " + startRow + "," + pageSize;
+            selectSQL = sqlFetchRows + " limit " + pageSize + " OFFSET " + startRow;
         }
 
         List<E> result = jt.query(selectSQL, args, rowMapper);
@@ -126,7 +126,7 @@ public class PaginationHelper<E> {
 
         String selectSQL = sqlFetchRows;
         if (STANDALONE_MODE && !PropertyUtil.isStandaloneUseMysql()) {
-            selectSQL = selectSQL.replaceAll("(?i)LIMIT \\?,\\?", "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+            selectSQL = selectSQL.replaceAll("(?i)LIMIT \\? OFFSET \\?", "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
         }
 
         List<E> result = jt.query(selectSQL, args, rowMapper);
@@ -167,7 +167,7 @@ public class PaginationHelper<E> {
 
         String selectSQL = sqlFetchRows;
         if (STANDALONE_MODE && !PropertyUtil.isStandaloneUseMysql()) {
-            selectSQL = selectSQL.replaceAll("(?i)LIMIT \\?,\\?", "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+            selectSQL = selectSQL.replaceAll("(?i)LIMIT \\? OFFSET \\?", "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
         }
 
         List<E> result = jt.query(selectSQL, args2, rowMapper);
@@ -188,7 +188,7 @@ public class PaginationHelper<E> {
 
         String selectSQL = sqlFetchRows;
         if (STANDALONE_MODE && !PropertyUtil.isStandaloneUseMysql()) {
-            selectSQL = selectSQL.replaceAll("(?i)LIMIT \\?,\\?", "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+            selectSQL = selectSQL.replaceAll("(?i)LIMIT \\? OFFSET \\?", "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
         }
 
         List<E> result = jt.query(selectSQL, args, rowMapper);

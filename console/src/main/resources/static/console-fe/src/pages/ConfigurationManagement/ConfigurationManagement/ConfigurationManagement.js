@@ -81,7 +81,7 @@ class ConfigurationManagement extends React.Component {
       value: '',
       visible: false,
       total: 0,
-      pageSize: 10,
+      pageSize: 30,
       currentPage: 1,
       dataSource: [],
       fieldValue: [],
@@ -1372,7 +1372,7 @@ class ConfigurationManagement extends React.Component {
                 </div>
                 <Pagination
                   style={{ float: 'right' }}
-                  pageSizeList={[10, 20, 30]}
+                  pageSizeList={[30, 60, 90]}
                   pageSizePosition="start"
                   pageSizeSelector="dropdown"
                   popupProps={{ align: 'bl tl' }}

@@ -1334,7 +1334,7 @@ public class PersistService {
         final String appName = configAdvanceInfo == null ? null : (String) configAdvanceInfo.get("appName");
         final String configTags = configAdvanceInfo == null ? null : (String) configAdvanceInfo.get("config_tags");
         String sqlCount = "select count(*) from config_info";
-        String sql = "select ID,data_id,group_id,tenant_id,app_name,content,type from config_info";
+        String sql = "select ID,data_id,group_id,tenant_id,app_name,content,type from config_info  a ";
         StringBuilder where = new StringBuilder(" where ");
         List<String> paramList = new ArrayList<String>();
         paramList.add(tenantTmp);
@@ -1385,7 +1385,7 @@ public class PersistService {
             }
         }
         try {
-            return helper.fetchPage(this.jt, sqlCount + where, sql + where, paramList.toArray(), pageNo, pageSize,
+            return helper.fetchPage(this.jt, sqlCount + where, sql + where +" order by a.id desc ", paramList.toArray(), pageNo, pageSize,
                 CONFIG_INFO_ROW_MAPPER);
         } catch (CannotGetJdbcConnectionException e) {
             fatalLog.error("[db-error] " + e.toString(), e);

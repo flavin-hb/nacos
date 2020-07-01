@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 package com.alibaba.nacos.config.server.service.capacity;
-
+import com.alibaba.nacos.config.server.result.CustomGeneratedKeyHolder;
 import com.alibaba.nacos.config.server.model.capacity.TenantCapacity;
 import com.alibaba.nacos.config.server.service.datasource.DataSourceService;
 import com.alibaba.nacos.config.server.service.datasource.DynamicDataSource;
@@ -88,7 +88,7 @@ public class TenantCapacityPersistService {
             "INSERT INTO tenant_capacity (tenant_id, quota, `usage`, `max_size`, max_aggr_count, max_aggr_size, "
                 + "gmt_create, gmt_modified) SELECT ?, ?, count(*), ?, ?, ?, ?, ? FROM config_info WHERE tenant_id=?;";
         try {
-            GeneratedKeyHolder generatedKeyHolder = new GeneratedKeyHolder();
+            GeneratedKeyHolder generatedKeyHolder = new CustomGeneratedKeyHolder("id");
             PreparedStatementCreator preparedStatementCreator = new PreparedStatementCreator() {
                 @Override
                 public PreparedStatement createPreparedStatement(Connection connection) throws SQLException {

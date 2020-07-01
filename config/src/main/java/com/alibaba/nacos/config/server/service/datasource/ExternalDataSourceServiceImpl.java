@@ -182,7 +182,7 @@ public class ExternalDataSourceServiceImpl implements DataSourceService {
 
                 // 每10分钟检查一遍连接池
                 ds.setValidationTimeout(TimeUnit.MINUTES.toMillis(10L));
-                ds.setConnectionTestQuery("SELECT 1 FROM dual");
+                ds.setConnectionTestQuery("SELECT 1 ");
 
                 dblist.add(ds);
 

@@ -39,11 +39,13 @@ import com.alibaba.nacos.config.server.model.SameConfigPolicy;
 import com.alibaba.nacos.config.server.model.SubInfo;
 import com.alibaba.nacos.config.server.model.TenantInfo;
 import com.alibaba.nacos.config.server.model.event.ConfigDataChangeEvent;
+import com.alibaba.nacos.config.server.result.CustomGeneratedKeyHolder;
 import com.alibaba.nacos.config.server.service.datasource.DataSourceService;
 import com.alibaba.nacos.config.server.service.datasource.DynamicDataSource;
 import com.alibaba.nacos.config.server.service.trace.ConfigTraceService;
 import com.alibaba.nacos.config.server.utils.LogUtil;
 import com.alibaba.nacos.config.server.utils.ParamUtils;
+import com.alibaba.nacos.config.server.utils.TimeUtils;
 import com.alibaba.nacos.config.server.utils.event.EventDispatcher;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
@@ -1119,7 +1121,7 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
 				null :
 				(String) configAdvanceInfo.get("config_tags");
 		String sqlCount = "select count(*) from config_info";
-		String sql = "select ID,data_id,group_id,tenant_id,app_name,content,type from config_info";
+		String sql = "select ID,data_id,group_id,tenant_id,app_name,content,type from config_info a ";
 		StringBuilder where = new StringBuilder(" where ");
 		List<String> paramList = new ArrayList<String>();
 		paramList.add(tenantTmp);
@@ -1171,7 +1173,7 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
 		}
 		try {
 			return helper
-					.fetchPage(sqlCount + where, sql + where, paramList.toArray(), pageNo,
+					.fetchPage(sqlCount + where, sql + where +" order by a.id desc ", paramList.toArray(), pageNo,
 							pageSize, CONFIG_INFO_ROW_MAPPER);
 		}
 		catch (CannotGetJdbcConnectionException e) {
@@ -1487,15 +1489,15 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
 	}
 
 	public List<String> getTenantIdList(int page, int pageSize) {
-		String sql = "SELECT tenant_id FROM config_info WHERE tenant_id != '' GROUP BY tenant_id LIMIT ?, ?";
+		String sql = "SELECT tenant_id FROM config_info WHERE tenant_id != '' GROUP BY tenant_id LIMIT ? OFFSET ?";
 		int from = (page - 1) * pageSize;
-		return jt.queryForList(sql, String.class, from, pageSize);
+		return jt.queryForList(sql, String.class, pageSize, from);
 	}
 
 	public List<String> getGroupIdList(int page, int pageSize) {
-		String sql = "SELECT group_id FROM config_info WHERE tenant_id ='' GROUP BY group_id LIMIT ?, ?";
+		String sql = "SELECT group_id FROM config_info WHERE tenant_id ='' GROUP BY group_id LIMIT ? OFFSET ?";
 		int from = (page - 1) * pageSize;
-		return jt.queryForList(sql, String.class, from, pageSize);
+		return jt.queryForList(sql, String.class, pageSize, from);
 	}
 
 	public int aggrConfigInfoCount(String dataId, String group, String tenant) {
@@ -1568,7 +1570,7 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
 						+ " FROM (                               "
 						+ "   SELECT id FROM config_info         "
 						+ "   WHERE tenant_id like ?                  "
-						+ "   ORDER BY id LIMIT ?,?             "
+						+ "   ORDER BY id LIMIT ? OFFSET ?              "
 						+ " ) g, config_info t                   "
 						+ " WHERE g.id = t.id                    ";
 
@@ -1576,7 +1578,7 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
 		try {
 			return helper.fetchPageLimit(sqlCountRows, sqlFetchRows,
 					new Object[] { generateLikeArgument(tenantTmp),
-							(pageNo - 1) * pageSize, pageSize }, pageNo, pageSize,
+                        pageSize, (pageNo - 1) * pageSize }, pageNo, pageSize,
 					CONFIG_INFO_ROW_MAPPER);
 		}
 		catch (CannotGetJdbcConnectionException e) {
@@ -1599,7 +1601,7 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
 				+ " FROM (                               "
 				+ "   SELECT id FROM config_info         "
 				+ "   WHERE tenant_id LIKE ?                  "
-				+ "   ORDER BY id LIMIT ?, ?             "
+				+ "   ORDER BY id LIMIT ? OFFSET ?              "
 				+ " ) g, config_info t                   "
 				+ " WHERE g.id = t.id                    ";
 
@@ -1621,7 +1623,7 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
 		try {
 			List<ConfigKey> result = jt.query(select,
 					new Object[] { generateLikeArgument(tenantTmp),
-							(pageNo - 1) * pageSize, pageSize },
+                        pageSize, (pageNo - 1) * pageSize },
 					// new Object[0],
 					CONFIG_KEY_ROW_MAPPER);
 
@@ -1653,14 +1655,14 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
 		String sqlFetchRows = " SELECT t.id,data_id,group_id,content,md5 "
 				+ " FROM (                               "
 				+ "   SELECT id FROM config_info         "
-				+ "   ORDER BY id LIMIT ?,?             "
+				+ "   ORDER BY id LIMIT ? OFFSET ?            "
 				+ " ) g, config_info t                   "
 				+ " WHERE g.id = t.id                    ";
 
 		PaginationHelper<ConfigInfoBase> helper = createPaginationHelper();
 		try {
 			return helper.fetchPageLimit(sqlCountRows, sqlFetchRows,
-					new Object[] { (pageNo - 1) * pageSize, pageSize }, pageNo, pageSize,
+					new Object[] { pageSize, (pageNo - 1) * pageSize }, pageNo, pageSize,
 					CONFIG_INFO_BASE_ROW_MAPPER);
 		}
 		catch (CannotGetJdbcConnectionException e) {
@@ -1676,7 +1678,7 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
 				" SELECT t.id,type,data_id,group_id,tenant_id,app_name,content,md5,gmt_modified "
 						+ " FROM (                               "
 						+ "   SELECT id FROM config_info         "
-						+ "   ORDER BY id LIMIT ?,?             "
+						+ "   ORDER BY id LIMIT ? OFFSET ?              "
 						+ " ) g, config_info t                   "
 						+ " WHERE g.id = t.id                    ";
 		PaginationHelper<ConfigInfoWrapper> helper = createPaginationHelper();
@@ -1685,7 +1687,8 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
 
 		try {
 			return helper
-					.fetchPageLimit(sqlCountRows, sqlFetchRows, params.toArray(), pageNo,
+					.fetchPageLimit(sqlCountRows, sqlFetchRows, new Object[]{
+                            pageSize, (pageNo - 1) * pageSize}, pageNo,
 							pageSize, CONFIG_INFO_WRAPPER_ROW_MAPPER);
 		}
 		catch (CannotGetJdbcConnectionException e) {
@@ -1698,11 +1701,11 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
 			final int pageSize) {
 		String select =
 				"SELECT id,data_id,group_id,tenant_id,app_name,content,md5,gmt_modified,type from config_info where id > ? "
-						+ "order by id asc limit ?,?";
+						+ "order by id asc LIMIT ? OFFSET ? ";
 		PaginationHelper<ConfigInfoWrapper> helper = createPaginationHelper();
 		try {
 			return helper
-					.fetchPageLimit(select, new Object[] { lastMaxId, 0, pageSize }, 1,
+					.fetchPageLimit(select, new Object[] { lastMaxId, pageSize, 0 }, 1,
 							pageSize, CONFIG_INFO_WRAPPER_ROW_MAPPER);
 		}
 		catch (CannotGetJdbcConnectionException e) {
@@ -1718,13 +1721,13 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
 				" SELECT t.id,data_id,group_id,tenant_id,app_name,content,md5,gmt_modified,beta_ips "
 						+ " FROM (                               "
 						+ "   SELECT id FROM config_info_beta         "
-						+ "   ORDER BY id LIMIT ?,?             "
+						+ "   ORDER BY id LIMIT ? OFFSET ?             "
 						+ " ) g, config_info_beta t                   "
 						+ " WHERE g.id = t.id                    ";
 		PaginationHelper<ConfigInfoBetaWrapper> helper = createPaginationHelper();
 		try {
 			return helper.fetchPageLimit(sqlCountRows, sqlFetchRows,
-					new Object[] { (pageNo - 1) * pageSize, pageSize }, pageNo, pageSize,
+					new Object[] { pageSize, (pageNo - 1) * pageSize}, pageNo, pageSize,
 					CONFIG_INFO_BETA_WRAPPER_ROW_MAPPER);
 
 		}
@@ -1741,13 +1744,13 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
 				" SELECT t.id,data_id,group_id,tenant_id,tag_id,app_name,content,md5,gmt_modified "
 						+ " FROM (                               "
 						+ "   SELECT id FROM config_info_tag         "
-						+ "   ORDER BY id LIMIT ?,?             "
+						+ "   ORDER BY id LIMIT ? OFFSET ?            "
 						+ " ) g, config_info_tag t                   "
 						+ " WHERE g.id = t.id                    ";
 		PaginationHelper<ConfigInfoTagWrapper> helper = createPaginationHelper();
 		try {
 			return helper.fetchPageLimit(sqlCountRows, sqlFetchRows,
-					new Object[] { (pageNo - 1) * pageSize, pageSize }, pageNo, pageSize,
+					new Object[] { pageSize, (pageNo - 1) * pageSize}, pageNo, pageSize,
 					CONFIG_INFO_TAG_WRAPPER_ROW_MAPPER);
 
 		}
@@ -2183,13 +2186,13 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
 		String sqlCountRows = "SELECT COUNT(*) FROM config_info_aggr WHERE data_id = ? and group_id = ? and tenant_id = ?";
 		String sqlFetchRows =
 				"select data_id,group_id,tenant_id,datum_id,app_name,content from config_info_aggr where data_id=? and "
-						+ "group_id=? and tenant_id=? order by datum_id limit ?,?";
+						+ "group_id=? and tenant_id=? order by datum_id LIMIT ? OFFSET ? ";
 		PaginationHelper<ConfigInfoAggr> helper = createPaginationHelper();
 		try {
 			return helper.fetchPageLimit(sqlCountRows,
 					new Object[] { dataId, group, tenantTmp }, sqlFetchRows,
-					new Object[] { dataId, group, tenantTmp, (pageNo - 1) * pageSize,
-							pageSize }, pageNo, pageSize, CONFIG_INFO_AGGR_ROW_MAPPER);
+					new Object[] { dataId, group, tenantTmp, pageSize, (pageNo - 1) * pageSize,
+							 }, pageNo, pageSize, CONFIG_INFO_AGGR_ROW_MAPPER);
 
 		}
 		catch (CannotGetJdbcConnectionException e) {
@@ -2489,7 +2492,7 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
 
 		final String md5Tmp = MD5Utils.md5Hex(configInfo.getContent(), Constants.ENCODE);
 
-		KeyHolder keyHolder = new GeneratedKeyHolder();
+		KeyHolder keyHolder =  new CustomGeneratedKeyHolder("id");
 
 		final String sql =
 				"INSERT INTO config_info(data_id,group_id,tenant_id,app_name,content,md5,src_ip,src_user,gmt_create,"
@@ -3037,7 +3040,7 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
 		try {
 			jt.update(
 					"UPDATE tenant_info SET tenant_name = ?, tenant_desc = ?, gmt_modified= ? WHERE kp=? AND tenant_id=?",
-					tenantName, tenantDesc, System.currentTimeMillis(), kp, tenantId);
+					tenantName, tenantDesc, TimeUtils.getTime(System.currentTimeMillis()), kp, tenantId);
 		}
 		catch (DataAccessException e) {
 			LogUtil.fatalLog.error("[db-error] " + e.toString(), e);
@@ -3146,12 +3149,12 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
 
 	public List<ConfigInfoWrapper> listGroupKeyMd5ByPage(int pageNo, int pageSize) {
 		String sqlCountRows = " SELECT COUNT(*) FROM config_info ";
-		String sqlFetchRows = " SELECT t.id,data_id,group_id,tenant_id,app_name,md5,type,gmt_modified FROM ( SELECT id FROM config_info ORDER BY id LIMIT ?,?  ) g, config_info t WHERE g.id = t.id";
+		String sqlFetchRows = " SELECT t.id,data_id,group_id,tenant_id,app_name,md5,type,gmt_modified FROM ( SELECT id FROM config_info ORDER BY id LIMIT ? OFFSET ?  ) g, config_info t WHERE g.id = t.id";
 		PaginationHelper<ConfigInfoWrapper> helper = createPaginationHelper();
 		try {
 			Page<ConfigInfoWrapper> page = helper
 					.fetchPageLimit(sqlCountRows, sqlFetchRows,
-							new Object[] { (pageNo - 1) * pageSize, pageSize }, pageNo,
+							new Object[] { pageSize, (pageNo - 1) * pageSize }, pageNo,
 							pageSize, CONFIG_INFO_WRAPPER_ROW_MAPPER);
 
 			return page.getPageItems();

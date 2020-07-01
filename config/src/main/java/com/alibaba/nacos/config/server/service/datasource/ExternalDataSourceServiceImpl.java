@@ -55,6 +55,7 @@ public class ExternalDataSourceServiceImpl implements DataSourceService {
     private static final Logger log = LoggerFactory.getLogger(
             ExternalDataSourceServiceImpl.class);
     private static final String DEFAULT_MYSQL_DRIVER = "com.mysql.jdbc.Driver";
+    private static final String DEFAULT_PG_DRIVER = "org.postgresql.Driver";
     private static final String MYSQL_HIGH_LEVEL_DRIVER = "com.mysql.cj.jdbc.Driver";
     private static String JDBC_DRIVER_NAME;
 
@@ -122,6 +123,9 @@ public class ExternalDataSourceServiceImpl implements DataSourceService {
          */
         tjt.setTimeout(TRANSACTION_QUERY_TIMEOUT);
         if (PropertyUtil.isUseExternalDB()) {
+            if(PropertyUtil.isUsePostgresqlDB()){
+                JDBC_DRIVER_NAME = DEFAULT_PG_DRIVER;
+            }
             try {
                 reload();
             } catch (IOException e) {

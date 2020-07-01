@@ -88,7 +88,7 @@ class ExternalStoragePaginationHelperImpl<E> implements PaginationHelper {
 		} else if (lastMaxId != null) {
 			selectSQL = sqlFetchRows + " and id > " + lastMaxId + " order by id asc" + " limit " + 0 + "," + pageSize;
 		} else {
-			selectSQL = sqlFetchRows + " limit " + startRow + "," + pageSize;
+            selectSQL = sqlFetchRows + " limit " + pageSize + " OFFSET " + startRow;
 		}
 
 		List<E> result = jdbcTemplate.query(selectSQL, args, rowMapper);
@@ -127,10 +127,6 @@ class ExternalStoragePaginationHelperImpl<E> implements PaginationHelper {
 		}
 
 		String selectSQL = sqlFetchRows;
-		if (isDerby()) {
-			selectSQL = selectSQL.replaceAll("(?i)LIMIT \\?,\\?", "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
-		}
-
 		List<E> result = jdbcTemplate.query(selectSQL, args, rowMapper);
 		for (E item : result) {
 			page.getPageItems().add(item);
@@ -168,10 +164,6 @@ class ExternalStoragePaginationHelperImpl<E> implements PaginationHelper {
 		}
 
 		String selectSQL = sqlFetchRows;
-		if (isDerby()) {
-			selectSQL = selectSQL.replaceAll("(?i)LIMIT \\?,\\?", "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
-		}
-
 		List<E> result = jdbcTemplate.query(selectSQL, args2, rowMapper);
 		for (E item : result) {
 			page.getPageItems().add(item);
@@ -189,10 +181,6 @@ class ExternalStoragePaginationHelperImpl<E> implements PaginationHelper {
 		final Page<E> page = new Page<E>();
 
 		String selectSQL = sqlFetchRows;
-		if (isDerby()) {
-			selectSQL = selectSQL.replaceAll("(?i)LIMIT \\?,\\?", "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
-		}
-
 		List<E> result = jdbcTemplate.query(selectSQL, args, rowMapper);
 		for (E item : result) {
 			page.getPageItems().add(item);
@@ -202,11 +190,6 @@ class ExternalStoragePaginationHelperImpl<E> implements PaginationHelper {
 
 	public void updateLimit(final String sql, final Object[] args) {
 		String sqlUpdate = sql;
-
-		if (isDerby()) {
-			sqlUpdate = sqlUpdate.replaceAll("limit \\?", "OFFSET 0 ROWS FETCH NEXT ? ROWS ONLY");
-		}
-
 		try {
 			jdbcTemplate.update(sqlUpdate, args);
 		} finally {

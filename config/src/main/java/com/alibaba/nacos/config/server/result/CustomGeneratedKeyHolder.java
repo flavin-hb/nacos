@@ -25,7 +25,7 @@ public class CustomGeneratedKeyHolder extends GeneratedKeyHolder {
 
     @Override
     public Number getKey() throws InvalidDataAccessApiUsageException, DataRetrievalFailureException {
-        if(PropertyUtil.isStandaloneUsePostgresql()){
+        if(PropertyUtil.isUsePostgresqlDB()){
             List<Map<String, Object>> keyList = getKeyList();
             if (keyList.isEmpty()) {
                 return null;

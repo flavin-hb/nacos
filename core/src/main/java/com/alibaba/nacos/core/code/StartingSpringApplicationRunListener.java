@@ -18,6 +18,7 @@ package com.alibaba.nacos.core.code;
 import com.alibaba.nacos.common.executor.ExecutorFactory;
 import com.alibaba.nacos.common.executor.NameThreadFactory;
 import com.alibaba.nacos.common.executor.ThreadPoolManager;
+import com.alibaba.nacos.common.utils.StringUtils;
 import com.alibaba.nacos.core.file.WatchFileCenter;
 import com.alibaba.nacos.common.http.HttpClientManager;
 import com.alibaba.nacos.core.utils.DiskUtils;
@@ -119,7 +120,8 @@ public class StartingSpringApplicationRunListener
 		logFilePath();
 
 		// External data sources are used by default in cluster mode
-		boolean useExternalStorage = ("mysql".equalsIgnoreCase(env.getProperty("spring.datasource.platform", "")));
+        String platform = env.getProperty("spring.datasource.platform", "");
+		boolean useExternalStorage = "mysql".equalsIgnoreCase(platform) || "postgresql".equalsIgnoreCase(platform);
 
 		// must initialize after setUseExternalDB
 		// This value is true in stand-alone mode and false in cluster mode
